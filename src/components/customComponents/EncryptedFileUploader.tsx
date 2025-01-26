@@ -14,6 +14,7 @@ import {
   generateInitializationVector,
   serializeUInt8Array,
 } from "@/modules/encryption/encryptionUtils";
+import { useToast } from "@/hooks/use-toast";
 
 // const encryptAndSave = async () => {};
 
@@ -24,6 +25,8 @@ const VerticalSpace = () => {
 };
 
 export const EncryptedFileUploader = () => {
+  const { toast } = useToast();
+
   const fileUploadElementRef = useRef<HTMLInputElement>(null);
   const [unencryptedFileBuffer, setUnencryptedFileBuffer] =
     useState<ArrayBuffer>();
@@ -53,7 +56,19 @@ export const EncryptedFileUploader = () => {
   return (
     <Card className="w-full max-w-md min-w-96 mx-auto shadow-lg">
       <CardHeader>
-        <CardTitle>Encrypted File Uploader: {step}</CardTitle>
+        <CardTitle>
+          Encrypted File Uploader: {step}{" "}
+          <Button
+            onClick={() => {
+              toast({
+                title: "Scheduled: Catch up",
+                description: "Friday, February 10, 2023 at 5:57 PM",
+              });
+            }}
+          >
+            Show Toast
+          </Button>
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div>
