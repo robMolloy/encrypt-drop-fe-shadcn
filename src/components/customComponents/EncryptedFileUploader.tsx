@@ -56,19 +56,7 @@ export const EncryptedFileUploader = () => {
   return (
     <Card className="w-full max-w-md min-w-96 mx-auto shadow-lg">
       <CardHeader>
-        <CardTitle>
-          Encrypted File Uploader: {step}{" "}
-          <Button
-            onClick={() => {
-              toast({
-                title: "Scheduled: Catch up",
-                description: "Friday, February 10, 2023 at 5:57 PM",
-              });
-            }}
-          >
-            Show Toast
-          </Button>
-        </CardTitle>
+        <CardTitle>Encrypted File Uploader: {step} </CardTitle>
       </CardHeader>
       <CardContent>
         <div>
@@ -100,6 +88,7 @@ export const EncryptedFileUploader = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            disabled={step === "select_file"}
           />
         </div>
         <VerticalSpace />
@@ -111,19 +100,24 @@ export const EncryptedFileUploader = () => {
             type="text"
             value={encryptedFileName}
             onChange={(e) => setEncryptedFileName(e.target.value)}
+            disabled={step === "select_file"}
           />
         </div>
         <VerticalSpace />
         <div className="flex gap-2">
-          <Button onClick={() => {}} disabled={false} className="flex-1">
-            Encrypt & Save
-          </Button>
           <Button
             onClick={handleEncryptAndDownload}
-            disabled={false}
+            disabled={step === "select_file"}
             className="flex-1"
           >
             Encrypt & Download
+          </Button>
+          <Button
+            onClick={() => {}}
+            disabled={step === "select_file"}
+            className="flex-1"
+          >
+            Encrypt & Save
           </Button>
         </div>
         <VerticalSpace />
@@ -160,6 +154,7 @@ export const EncryptedFileUploader = () => {
                     setSerialisedInitialisationVector(e.target.value)
                   }
                   className="font-mono"
+                  disabled={step === "select_file"}
                 />
               </div>
               <Button
@@ -186,10 +181,16 @@ export const EncryptedFileUploader = () => {
                     setSerialisedEncryptionKeySalt(e.target.value)
                   }
                   className="font-mono"
+                  disabled={step === "select_file"}
                 />
               </div>
               <Button
-                onClick={() => copyToClipboard(serialisedEncryptionKeySalt)}
+                onClick={() => {
+                  copyToClipboard(serialisedEncryptionKeySalt);
+                  toast({
+                    title: "Copied to clipboard",
+                  });
+                }}
                 size="icon"
                 variant="outline"
                 aria-label="Copy Salt"
