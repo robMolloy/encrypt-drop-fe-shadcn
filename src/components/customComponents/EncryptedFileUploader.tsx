@@ -1,234 +1,186 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { ClipboardCopy, ChevronDown, ChevronUp } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  generateEncryptionKeySalt,
+  generateInitializationVector,
+  serializeUInt8Array,
+} from "@/modules/encryption/encryptionUtils";
+
+// const encryptAndSave = async () => {};
+
+const copyToClipboard = (text: string) => navigator.clipboard.writeText(text);
+
+const VerticalSpace = () => {
+  return <div className="p-2" />;
+};
 
 export const EncryptedFileUploader = () => {
-  const [file, setFile] = useState<File | null>(null);
-  const [key, setKey] = useState("");
+  const fileUploadElementRef = useRef<HTMLInputElement>(null);
+  const [unencryptedFileBuffer, setUnencryptedFileBuffer] =
+    useState<ArrayBuffer>();
+
+  const [encryptedFileName, setEncryptedFileName] = useState("");
+
   const [password, setPassword] = useState("");
-  const [isEncrypting, setIsEncrypting] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
-  const [encryptionData, setEncryptionData] = useState<{
-    iv: Uint8Array;
-    salt: Uint8Array;
-  } | null>(null);
+  const [isEncryptionKeyDataVisible, setIsEncryptionKeyDataVisible] =
+    useState(false);
+  const [serialisedInitialisationVector, setSerialisedInitialisationVector] =
+    useState("");
+  const [serialisedEncryptionKeySalt, setSerialisedEncryptionKeySalt] =
+    useState("");
 
-  console.log(`EncryptedFileUploader.tsx:${/*LL*/ 18}`, {
-    file,
-    setIsEncrypting,
-    setIsUploading,
-    setUploadedUrl,
-    setEncryptionData,
-  });
+  useEffect(() => {
+    const eks = serializeUInt8Array(generateEncryptionKeySalt());
+    setSerialisedEncryptionKeySalt(eks);
+    const iv = serializeUInt8Array(generateInitializationVector());
+    setSerialisedInitialisationVector(iv);
+  }, []);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFile(e.target.files[0]);
-    }
-  };
-
-  const handleEncryptAndSave = async () => {
-    // if (!file || !key || !password) {
-    //   alert("Please select a file and provide both key and password");
-    //   return;
-    // }
-    // setIsEncrypting(true);
-    // try {
-    //   const { encryptedBlob, iv, salt } = await encryptFile(
-    //     file,
-    //     key,
-    //     password
-    //   );
-    //   setEncryptionData({ iv, salt });
-    //   const encryptedFile = new File(
-    //     [encryptedBlob],
-    //     `${file.name}.encrypted`,
-    //     { type: "application/octet-stream" }
-    //   );
-    //   setIsUploading(true);
-    //   const formData = new FormData();
-    //   formData.append("file", encryptedFile);
-    //   formData.append("encryptionKey", key);
-    //   formData.append("iv", JSON.stringify(Array.from(iv)));
-    //   formData.append("salt", JSON.stringify(Array.from(salt)));
-    //   const result = await uploadFile(formData);
-    //   if (result.success) {
-    //     setUploadedUrl(result.url);
-    //     alert("File encrypted and uploaded successfully!");
-    //   } else {
-    //     alert("Failed to upload encrypted file");
-    //   }
-    // } catch (error) {
-    //   console.error("Error during encryption or upload:", error);
-    //   alert("An error occurred during encryption or upload");
-    // } finally {
-    //   setIsEncrypting(false);
-    //   setIsUploading(false);
-    // }
-  };
-
-  const handleEncryptAndDownload = async () => {
-    // if (!file || !key || !password) {
-    //   alert("Please select a file and provide both key and password");
-    //   return;
-    // }
-    // setIsEncrypting(true);
-    // try {
-    //   const { encryptedBlob, iv, salt } = await encryptFile(
-    //     file,
-    //     key,
-    //     password
-    //   );
-    //   setEncryptionData({ iv, salt });
-    //   const url = URL.createObjectURL(encryptedBlob);
-    //   const a = document.createElement("a");
-    //   a.href = url;
-    //   a.download = `${file.name}.encrypted`;
-    //   document.body.appendChild(a);
-    //   a.click();
-    //   document.body.removeChild(a);
-    //   URL.revokeObjectURL(url);
-    // } catch (error) {
-    //   console.error("Error during encryption:", error);
-    //   alert("An error occurred during encryption");
-    // } finally {
-    //   setIsEncrypting(false);
-    // }
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        alert("Copied to clipboard");
-      })
-      .catch((err) => {
-        console.error("Failed to copy: ", err);
-      });
-  };
+  const handleEncryptAndDownload = async () => {};
+  const step = (() => {
+    if (!unencryptedFileBuffer) return "select_file";
+  })();
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-xl">
-      <h2 className="text-2xl font-bold mb-6 text-center">
-        Encrypted File Uploader
-      </h2>
-      <div className="space-y-4">
+    <Card className="w-full max-w-md min-w-96 mx-auto shadow-lg">
+      <CardHeader>
+        <CardTitle>Encrypted File Uploader: {step}</CardTitle>
+      </CardHeader>
+      <CardContent>
         <div>
           <Label htmlFor="file">Select File</Label>
           <Input
             id="file"
             type="file"
-            onChange={handleFileChange}
-            ref={fileInputRef}
-            className="mt-1"
+            className="cursor-pointer"
+            onInput={async () => {
+              const fileInput = fileUploadElementRef.current;
+              if (!fileInput) return { success: false } as const;
+
+              const file = fileInput.files?.[0];
+              if (!file) return { success: false } as const;
+
+              const fileBuffer = await file.arrayBuffer();
+              setUnencryptedFileBuffer(fileBuffer);
+              setEncryptedFileName(`${file.name}.bin`);
+            }}
+            ref={fileUploadElementRef}
           />
         </div>
+        <VerticalSpace />
         <div>
-          <Label htmlFor="key">Encryption Key</Label>
+          <Label htmlFor="passwordInput">Password</Label>
           <Input
-            id="key"
-            type="text"
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-            className="mt-1"
-          />
-        </div>
-        <div>
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
+            id="passwordInput"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1"
           />
         </div>
-        <div className="flex space-x-4">
-          <Button
-            onClick={handleEncryptAndSave}
-            disabled={isEncrypting || isUploading}
-            className="flex-1"
-          >
-            {isEncrypting
-              ? "Encrypting..."
-              : isUploading
-              ? "Uploading..."
-              : "Encrypt & Save"}
+        <VerticalSpace />
+        <div>
+          <Label htmlFor="encryptedFileNameInput">Encrypted File Name</Label>
+          <Input
+            id="encryptedFileNameInput"
+            placeholder="Encrypted File Name"
+            type="text"
+            value={encryptedFileName}
+            onChange={(e) => setEncryptedFileName(e.target.value)}
+          />
+        </div>
+        <VerticalSpace />
+        <div className="flex gap-2">
+          <Button onClick={() => {}} disabled={false} className="flex-1">
+            Encrypt & Save
           </Button>
           <Button
             onClick={handleEncryptAndDownload}
-            disabled={isEncrypting}
+            disabled={false}
             className="flex-1"
           >
-            {isEncrypting ? "Encrypting..." : "Encrypt & Download"}
+            Encrypt & Download
           </Button>
         </div>
-        {uploadedUrl && (
-          <div className="mt-4">
-            <p className="text-sm text-gray-600">Encrypted file uploaded:</p>
-            <a
-              href={uploadedUrl}
-              className="text-blue-500 hover:underline break-all"
-              target="_blank"
-              rel="noopener noreferrer"
+        <VerticalSpace />
+        <Collapsible
+          open={isEncryptionKeyDataVisible}
+          onOpenChange={setIsEncryptionKeyDataVisible}
+          className="border rounded-md overflow-hidden"
+        >
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center justify-between w-full rounded-none"
             >
-              {uploadedUrl}
-            </a>
-          </div>
-        )}
-        {encryptionData && (
-          <div className="mt-4 space-y-2">
-            <div>
+              <span>View Encryption Details</span>
+              {(() => {
+                const Comp = isEncryptionKeyDataVisible
+                  ? ChevronUp
+                  : ChevronDown;
+                return <Comp className="h-4 w-4" />;
+              })()}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="p-3">
+            <div className="space-y-2">
               <Label htmlFor="iv">Initialization Vector (IV)</Label>
-              <div className="flex mt-1">
+              <div className="flex">
                 <Input
                   id="iv"
-                  value={JSON.stringify(Array.from(encryptionData.iv))}
-                  readOnly
+                  value={serialisedInitialisationVector}
+                  onChange={(e) =>
+                    setSerialisedInitialisationVector(e.target.value)
+                  }
                   className="font-mono text-sm flex-grow"
                 />
                 <Button
                   onClick={() =>
-                    copyToClipboard(
-                      JSON.stringify(Array.from(encryptionData.iv))
-                    )
+                    copyToClipboard(serialisedInitialisationVector)
                   }
-                  className="ml-2 px-2"
+                  size="icon"
+                  variant="outline"
+                  className="ml-2"
                   aria-label="Copy IV"
                 >
-                  {/* <ClipboardCopy className="h-4 w-4" /> */}
+                  <ClipboardCopy className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-            <div>
-              <Label htmlFor="salt">Salt</Label>
-              <div className="flex mt-1">
+
+            <VerticalSpace />
+
+            <div className="space-y-2">
+              <Label htmlFor="salt">Serialised Encryption Key Salt</Label>
+              <div className="flex">
                 <Input
                   id="salt"
-                  value={JSON.stringify(Array.from(encryptionData.salt))}
-                  readOnly
+                  value={serialisedEncryptionKeySalt}
                   className="font-mono text-sm flex-grow"
                 />
                 <Button
-                  onClick={() =>
-                    copyToClipboard(
-                      JSON.stringify(Array.from(encryptionData.salt))
-                    )
-                  }
-                  className="ml-2 px-2"
+                  onClick={() => copyToClipboard(serialisedEncryptionKeySalt)}
+                  size="icon"
+                  variant="outline"
+                  className="ml-2"
                   aria-label="Copy Salt"
                 >
-                  {/* <ClipboardCopy className="h-4 w-4" /> */}
+                  <ClipboardCopy className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-          </div>
-        )}
-      </div>
-    </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </CardContent>
+    </Card>
   );
 };
