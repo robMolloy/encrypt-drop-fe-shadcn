@@ -81,6 +81,7 @@ export const EncryptedFileUploader = () => {
           <Label htmlFor="passwordInput">Password</Label>
           <Input
             id="passwordInput"
+            placeholder="Password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -132,51 +133,54 @@ export const EncryptedFileUploader = () => {
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="p-3">
-            <div className="space-y-2">
-              <Label htmlFor="iv">Initialization Vector (IV)</Label>
-              <div className="flex">
+            <div className="flex w-full items-end gap-2">
+              <div className="flex-1">
+                <Label htmlFor="serialisedInitialisationVectorInput">
+                  Initialization Vector (IV)
+                </Label>
                 <Input
-                  id="iv"
+                  id="serialisedInitialisationVectorInput"
                   value={serialisedInitialisationVector}
                   onChange={(e) =>
                     setSerialisedInitialisationVector(e.target.value)
                   }
-                  className="font-mono text-sm flex-grow"
+                  className="font-mono"
                 />
-                <Button
-                  onClick={() =>
-                    copyToClipboard(serialisedInitialisationVector)
-                  }
-                  size="icon"
-                  variant="outline"
-                  className="ml-2"
-                  aria-label="Copy IV"
-                >
-                  <ClipboardCopy className="h-4 w-4" />
-                </Button>
               </div>
+              <Button
+                onClick={() => copyToClipboard(serialisedInitialisationVector)}
+                size="icon"
+                variant="outline"
+                aria-label="Copy IV"
+              >
+                <ClipboardCopy className="h-4 w-4" />
+              </Button>
             </div>
 
             <VerticalSpace />
 
-            <div className="space-y-2">
-              <Label htmlFor="salt">Serialised Encryption Key Salt</Label>
-              <div className="flex">
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <Label htmlFor="serialisedEncryptionKeySaltInput">
+                  Serialised Encryption Key Salt
+                </Label>
                 <Input
-                  id="salt"
+                  id="serialisedEncryptionKeySaltInput"
                   value={serialisedEncryptionKeySalt}
-                  className="font-mono text-sm flex-grow"
+                  onChange={(e) =>
+                    setSerialisedEncryptionKeySalt(e.target.value)
+                  }
+                  className="font-mono"
                 />
-                <Button
-                  onClick={() => copyToClipboard(serialisedEncryptionKeySalt)}
-                  size="icon"
-                  variant="outline"
-                  className="ml-2"
-                  aria-label="Copy Salt"
-                >
-                  <ClipboardCopy className="h-4 w-4" />
-                </Button>
               </div>
+              <Button
+                onClick={() => copyToClipboard(serialisedEncryptionKeySalt)}
+                size="icon"
+                variant="outline"
+                aria-label="Copy Salt"
+              >
+                <ClipboardCopy className="h-4 w-4" />
+              </Button>
             </div>
           </CollapsibleContent>
         </Collapsible>
